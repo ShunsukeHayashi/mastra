@@ -6,7 +6,8 @@ import {
   trendKeywordTool, 
   competitorAnalysisTool, 
   imageGenerationTool, 
-  noteDraftSaveTool 
+  noteDraftSaveTool,
+  storyTemplateTool 
 } from '../tools/noteTools';
 
 export const weatherAgent = new Agent({
@@ -36,6 +37,7 @@ export const noteArticleAgentWithTools = new Agent({
     trendKeywordTool, 
     competitorAnalysisTool, 
     imageGenerationTool, 
-    noteDraftSaveTool 
+    noteDraftSaveTool,
+    storyTemplateTool 
   },
 });

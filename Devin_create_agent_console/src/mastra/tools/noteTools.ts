@@ -168,8 +168,8 @@ export const imageGenerationTool = createTool({
         fullPrompt += `、スタイル: ${context.style}`;
       }
       
-      // 日本語プロンプトを使用
-      const japanesePrompt = `高品質な${fullPrompt}の画像を生成してください。note.comの記事に使用します。`;
+      // 日本語プロンプトを使用 - より感情的な表現に
+      const japanesePrompt = `感情を強く喚起する${fullPrompt}の画像を生成してください。人間の表情（喜び・悲しみ・驚き・感動など）が鮮明に見える、感情の機微が伝わる瞬間を捉えた写真。ストーリー性があり、見る人の心に響く具体的な状況設定。一般的なストック写真ではなく、まるで実際の体験を切り取ったような独自性のある表現で。note.comの記事に使用します。`;
       
       // OpenAI APIリクエスト
       const response = await axios.post(
@@ -291,5 +291,46 @@ export const noteDraftSaveTool = createTool({
         error: error instanceof Error ? error.message : '不明なエラー',
       };
     }
+  },
+});
+
+// ストーリーテンプレート生成ツール - 感動品質向上版
+export const storyTemplateTool = createTool({
+  id: 'generate-story-template',
+  description: '感動品質の高い記事用のストーリーテンプレートを生成する',
+  inputSchema: z.object({
+    topic: z.string().describe('記事のトピック'),
+    audience: z.string().optional().describe('対象読者層'),
+  }),
+  outputSchema: z.object({
+    template: z.object({
+      personalHook: z.string().describe('具体的な時間・場所・感情を含む個人的な導入エピソード'),
+      challenge: z.string().describe('感情の起伏を含む具体的な失敗体験'),
+      attempt: z.string().describe('試行錯誤のプロセスと感情の変化'),
+      resolution: z.string().describe('具体的な成功体験と感情的な学び'),
+      readerPrompt: z.string().describe('読者の感情に訴えかける具体的な問いかけ'),
+    }),
+  }),
+  execute: async ({ context }) => {
+    // トピックに関連する感情豊かな個人的なストーリーテンプレートを生成
+    // 実際の実装ではAIを活用してカスタマイズされたテンプレートを生成
+    
+    const topic = context.topic;
+    const audience = context.audience || '一般読者';
+    
+    // 感動品質の高いテンプレート（具体的な時間・場所・感情表現を含む）
+    return {
+      template: {
+        personalHook: `2023年8月の猛暑日、私はエアコンの壊れたオフィスで${topic}に関するプロジェクトの締め切りに追われていました。額から流れる汗を拭いながら、画面を見つめる私の胸には不安と焦りが広がっていました。多くの人と同じように、私も${topic}の本質を見誤っていたのです。`,
+        
+        challenge: `最初の3回の試みはすべて失敗に終わりました。上司からの信頼を失いかけ、深夜に一人涙を流したこともあります。特に苦しかったのは、${topic}に関する従来の常識が通用せず、自分の無力さを痛感したときです。手が震え、胃がキリキリと痛むほどのプレッシャーを感じていました。`,
+        
+        attempt: `絶望の淵から這い上がるため、私は新しいアプローチを模索しました。まず、${topic}の基本を一から学び直し、次に業界の専門家5人に直接会って話を聞きました。彼らの言葉に少しずつ希望が湧き、夜も眠れないほどの興奮を覚えたのを今でも鮮明に覚えています。そして、思い切って全く異なる方法を試してみることにしました...`,
+        
+        resolution: `予想外の成功に、私は思わず声を上げて喜びました。この経験から、私は${topic}について単なる知識ではなく、心からの理解を得ることができました。失敗と向き合い、自分の弱さを認めることで初めて見えてくる景色があります。今では${topic}に取り組むたびに、あの日の達成感と安堵を思い出します。`,
+        
+        readerPrompt: `あなたも${topic}に取り組む中で、孤独や不安を感じたことはありませんか？もしよろしければ、あなたが乗り越えた壁や、今直面している課題をコメント欄で教えてください。あなたの経験が、同じ悩みを抱える誰かの希望になるかもしれません。`,
+      }
+    };
   },
 });
