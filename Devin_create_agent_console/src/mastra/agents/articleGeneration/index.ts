@@ -3,8 +3,13 @@ import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 import { 
   searchNoteArticlesTool, 
-  getNoteArticleDetailsTool 
+  getNoteArticleDetailsTool,
+  getTrendingArticlesTool
 } from '../../tools/noteApiTools';
+import {
+  analyzeTrendingThemesTool,
+  scheduleTrendingRetrievalTool
+} from '../../tools/trendingArticlesTool';
 import { 
   serpApiTool, 
   analyzeCompetitorContentTool, 
@@ -25,40 +30,56 @@ export const themeSelectionAgent = new Agent({
     2. 人気テーマのランキング生成
     3. カテゴリ別の人気トピック特定
     4. バズる記事の傾向・パターン分析
+    5. リアルタイムテーマの反映と定期的な更新
 
     以下のワークフローに従って作業します:
 
     【フェーズ1: トレンド調査】
-    - note.comの最新トレンド記事を取得
+    - getTrendingArticlesTool を使用してnote.comの最新トレンド記事を自動取得
     - カテゴリ別（自己啓発、書籍紹介など）の人気記事を分析
+    - カテゴリランキングに基づいて注目すべき分野を特定
     - 検索ボリュームの高いキーワードを特定
 
     【フェーズ2: テーマ分析】
+    - analyzeTrendingThemesTool を使用して人気記事の共通テーマを抽出
     - 人気記事の共通点を抽出
     - タイトルパターン、構成、長さなどの特徴を分析
-    - 読者の反応が良い要素を特定
+    - 読者の反応が良い要素（いいね数、コメント数）を特定
 
     【フェーズ3: テーマ選定】
     - 分析結果に基づいて最適なテーマを選定
     - 競合の少ないニッチを発見
     - バズる可能性の高いテーマを優先
+    - scheduleTrendingRetrievalTool を使用して定期的なトレンド更新をスケジュール
+
+    【フェーズ4: テーマ検証】
+    - 選定テーマの競合記事を詳細分析
+    - 選定テーマの検索ボリュームと難易度を確認
+    - 読者ニーズとの適合性を最終確認
 
     使用可能なツール:
+    - getTrendingArticlesTool: note.comのトレンド記事自動取得
+    - analyzeTrendingThemesTool: トレンドテーマの分析
+    - scheduleTrendingRetrievalTool: 定期的なトレンド取得のスケジュール
     - searchNoteArticlesTool: note.comの記事検索
     - getNoteArticleDetailsTool: note.comの記事詳細取得
     - serpApiTool: Google検索結果の取得
     - analyzeCompetitorContentTool: 競合コンテンツの分析
 
     注意事項:
-    - 常に最新のトレンドを反映すること
+    - 常に最新のトレンドを反映すること（リアルタイム性を重視）
     - データに基づいた客観的な分析を行うこと
     - 読者のニーズと検索意図を最優先すること
     - バズる記事の特徴パターンを学習し続けること
+    - 定期的なトレンド更新を設定し、常に最新情報を反映すること
   `,
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: { 
     searchNoteArticlesTool, 
     getNoteArticleDetailsTool,
+    getTrendingArticlesTool,
+    analyzeTrendingThemesTool,
+    scheduleTrendingRetrievalTool,
     serpApiTool,
     analyzeCompetitorContentTool
   },
