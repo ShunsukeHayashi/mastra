@@ -5,6 +5,9 @@ import { z } from 'zod';
 export * from './noteApiTools';
 // Export additional trending tools
 export { analyzeTrendingThemesTool, scheduleTrendingRetrievalTool } from './trendingArticlesTool';
+// Export evaluation tools
+export * from './evaluationTools';
+export * from './additionalEvaluationTools';
 
 // Weather Tool Interfaces
 interface GeocodingResponse {
