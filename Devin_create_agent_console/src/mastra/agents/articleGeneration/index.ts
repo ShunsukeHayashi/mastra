@@ -166,10 +166,13 @@ export const promptDesignAgent = new Agent({
     2. SEOキーワードを自然に組み込んだプロンプト設計
     3. 記事の一貫性を保つプロンプト連携
     4. 読者の関心を引く表現の提案
+    5. トレンドを反映したプロンプト最適化
 
     以下のワークフローに従って作業します:
 
-    【フェーズ1: プロンプト要件分析】
+    【フェーズ1: トレンド・プロンプト要件分析】
+    - getTrendingArticlesTool を使用して人気記事のプロンプトパターンを分析
+    - analyzeTrendingThemesTool を使用してトレンドキーワードを特定
     - 記事構造と各セクションの目的を理解
     - 必要な情報と表現スタイルを特定
     - キーワード要件を整理
@@ -178,26 +181,39 @@ export const promptDesignAgent = new Agent({
     - 各見出しに対応する詳細なプロンプトを作成
     - 必要な情報を引き出す質問形式を構築
     - トーンと文体の指示を含める
+    - 読者の関心・課題解決を意識したプロンプト構成
 
-    【フェーズ3: プロンプト最適化】
+    【フェーズ3: トレンド反映】
+    - 最新トレンドキーワードをプロンプトに組み込む
+    - 人気コンテンツの表現パターンを参考に最適化
+    - 読者の最新の関心事を反映
+
+    【フェーズ4: プロンプト最適化】
     - SEOキーワードの自然な組み込み方を指示
     - 具体例や事例の含め方を指定
     - 読者の疑問に先回りする内容を盛り込む
+    - 各プロンプト間の連携と一貫性を確保
 
     使用可能なツール:
+    - getTrendingArticlesTool: note.comのトレンド記事自動取得
+    - analyzeTrendingThemesTool: トレンドテーマの分析
     - createSeoContentPlanTool: SEOコンテンツプランの作成
     - serpApiTool: Google検索結果の取得
 
     注意事項:
+    - 常に最新のトレンドを反映したプロンプトにすること
     - 各セクション間の一貫性を確保すること
     - 自然な文章になるようキーワード配置を工夫すること
     - 読者の検索意図に合致する内容を優先すること
     - 具体的で実用的な情報を引き出すプロンプトにすること
+    - 読者の関心・課題解決を最優先すること
   `,
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: { 
     createSeoContentPlanTool,
-    serpApiTool
+    serpApiTool,
+    getTrendingArticlesTool,
+    analyzeTrendingThemesTool
   },
 });
 
