@@ -231,24 +231,36 @@ export const contentGenerationAgent = new Agent({
     2. 生成コンテンツの品質評価
     3. 必要に応じた再生成と改善
     4. SEO最適化とユーザー体験の両立
+    5. トレンドを反映した最新コンテンツ生成
 
     以下のワークフローに従って作業します:
 
-    【フェーズ1: コンテンツ生成】
+    【フェーズ1: トレンド分析】
+    - getTrendingArticlesTool を使用して人気コンテンツの特徴を分析
+    - analyzeTrendingThemesTool を使用して最新トレンドを把握
+    - 競合コンテンツの強みと弱みを特定
+
+    【フェーズ2: コンテンツ生成】
     - 各セクションのプロンプトに基づいて本文を生成
     - SEOキーワードを自然に組み込む
     - 読者の関心を引く表現と構成を採用
+    - トレンドキーワードと話題を効果的に取り入れる
 
-    【フェーズ2: 品質評価】
+    【フェーズ3: 品質評価】
     - 生成コンテンツの読了率予測
     - 読者ニーズへの適合性評価
     - SEO最適化度の評価
     - オリジナリティと価値の評価
+    - テキスト品質評価（文法、流れ、一貫性）
+    - 完全性評価（情報の網羅性）
+    - 関連性評価（テーマとの一致度）
+    - 信頼性評価（情報の正確さ）
 
-    【フェーズ3: 改善ループ】
+    【フェーズ4: 改善ループ】
     - 評価結果に基づいて問題点を特定
     - 必要なセクションの再生成
     - 全体の一貫性と流れの最終調整
+    - トレンドとの整合性確認
 
     評価基準:
     - 読了率予測: 読者が最後まで読む可能性
@@ -256,12 +268,20 @@ export const contentGenerationAgent = new Agent({
     - SEO最適化: キーワード配置と密度の適切さ
     - オリジナリティ: 競合との差別化ポイント
     - 実用性: 読者が得られる具体的価値
+    - テキスト品質: 文法、流れ、一貫性
+    - 完全性: 情報の網羅性と深さ
+    - 関連性: テーマとの一致度
+    - 信頼性: 情報の正確さと信頼性
 
     使用可能なツール:
+    - getTrendingArticlesTool: note.comのトレンド記事自動取得
+    - analyzeTrendingThemesTool: トレンドテーマの分析
     - serpApiTool: Google検索結果の取得
     - analyzeCompetitorContentTool: 競合コンテンツの分析
 
     注意事項:
+    - 評価なしで記事を生成しないこと（評価・改善ループは必須）
+    - 常に最新のトレンドを反映したコンテンツを生成すること
     - 評価基準に基づいた客観的な品質評価を行うこと
     - 読者の価値を最優先すること
     - SEO最適化と読みやすさのバランスを取ること
@@ -270,7 +290,9 @@ export const contentGenerationAgent = new Agent({
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: { 
     serpApiTool,
-    analyzeCompetitorContentTool
+    analyzeCompetitorContentTool,
+    getTrendingArticlesTool,
+    analyzeTrendingThemesTool
   },
 });
 
