@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { Agent } from '@mastra/core/agent';
 import { weatherTool } from '../tools';
 import { noteArticleAgent } from './noteArticleAgent';
+import { courseCreationAgent } from './courseCreationAgent';
 import { 
   trendKeywordTool, 
   competitorAnalysisTool, 
@@ -9,6 +10,14 @@ import {
   noteDraftSaveTool,
   storyTemplateTool 
 } from '../tools/noteTools';
+import {
+  courseStructureTool,
+  courseContentTool,
+  exerciseGenerationTool,
+  formatConversionTool,
+  quizGenerationTool,
+  videoSearchTool
+} from '../tools/courseTools';
 
 export const weatherAgent = new Agent({
   name: 'Weather Agent',
@@ -39,5 +48,21 @@ export const noteArticleAgentWithTools = new Agent({
     imageGenerationTool, 
     noteDraftSaveTool,
     storyTemplateTool 
+  },
+});
+
+// コース作成エージェントにツールを追加
+export const courseCreationAgentWithTools = new Agent({
+  name: courseCreationAgent.name,
+  instructions: courseCreationAgent.instructions,
+  model: anthropic('claude-3-5-sonnet-20241022'),
+  tools: {
+    courseStructureTool,
+    courseContentTool,
+    exerciseGenerationTool,
+    imageGenerationTool,
+    formatConversionTool,
+    quizGenerationTool,
+    videoSearchTool
   },
 });
