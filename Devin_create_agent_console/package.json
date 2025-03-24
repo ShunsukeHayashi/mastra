@@ -1,0 +1,27 @@
+{
+  "name": "devin_create_agent_console",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "chmod +x fix_permissions.sh && ./fix_permissions.sh && mastra dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.0",
+    "@mastra/core": "^0.6.3",
+    "axios": "^1.8.4",
+    "form-data": "^4.0.2",
+    "mastra": "^0.4.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.11",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
