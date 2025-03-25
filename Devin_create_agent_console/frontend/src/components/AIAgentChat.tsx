@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { chatWithAgent } from '../api/contractApi';
 
 interface Message {
   id: string;
@@ -18,9 +19,13 @@ const AIAgentChat: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Sample responses for demo purposes
+  // Mock API flag - set to false to use real API
+  const MOCK_API = true;
+
+  // Sample responses for demo/mock mode
   const demoResponses: Record<string, string> = {
     'default': 'ご質問ありがとうございます。契約書の管理や分析についてお手伝いできることがあれば、お気軽にお申し付けください。',
     'リスク': '契約書のリスク分析を行いました。主な懸念点は以下の通りです：\n\n1. 第5条: 責任範囲が不明確です\n2. 第8条: 解約条件が一方的である可能性があります\n3. 第12条: 知的財産権の帰属について曖昧な表現があります\n\n詳細な分析レポートをダッシュボードに追加しました。',
@@ -35,9 +40,9 @@ const AIAgentChat: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
@@ -48,37 +53,90 @@ const AIAgentChat: React.FC = () => {
     };
     
     setMessages(prev => [...prev, userMessage]);
+    const userInput = input; // Store input before clearing
     setInput('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      let responseContent = demoResponses.default;
-      
-      // Check for keywords in the input to provide relevant responses
-      const lowerInput = input.toLowerCase();
-      if (lowerInput.includes('リスク') || lowerInput.includes('risk')) {
-        responseContent = demoResponses.リスク;
-      } else if (lowerInput.includes('承認') || lowerInput.includes('フロー') || lowerInput.includes('flow')) {
-        responseContent = demoResponses.承認;
-      } else if (lowerInput.includes('nda') || lowerInput.includes('秘密保持')) {
-        responseContent = demoResponses.NDA;
-      } else if (lowerInput.includes('分析') || lowerInput.includes('解析')) {
-        responseContent = demoResponses.分析;
-      } else if (lowerInput.includes('mastra') || lowerInput.includes('マストラ')) {
-        responseContent = demoResponses.マストラ;
-      }
+    if (MOCK_API) {
+      // Mock API mode - simulate response with delay
+      setTimeout(() => {
+        let responseContent = demoResponses.default;
+        
+        // Check for keywords in the input to provide relevant responses
+        const lowerInput = userInput.toLowerCase();
+        if (lowerInput.includes('リスク') || lowerInput.includes('risk')) {
+          responseContent = demoResponses.リスク;
+        } else if (lowerInput.includes('承認') || lowerInput.includes('フロー') || lowerInput.includes('flow')) {
+          responseContent = demoResponses.承認;
+        } else if (lowerInput.includes('nda') || lowerInput.includes('秘密保持')) {
+          responseContent = demoResponses.NDA;
+        } else if (lowerInput.includes('分析') || lowerInput.includes('解析')) {
+          responseContent = demoResponses.分析;
+        } else if (lowerInput.includes('mastra') || lowerInput.includes('マストラ')) {
+          responseContent = demoResponses.マストラ;
+        }
 
-      const assistantMessage: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: responseContent,
-        timestamp: new Date()
-      };
+        const assistantMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: responseContent,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+      }, 1500);
+      return;
+    }
+
+    // Real API mode - use streaming response
+    try {
+      // Create an initial blank response that will be updated with streaming content
+      const tempResponseId = `temp-${Date.now()}`;
+      setMessages(prev => [
+        ...prev,
+        {
+          id: tempResponseId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date()
+        }
+      ]);
+
+      // Stream the response
+      const { conversationId: newConversationId } = await chatWithAgent(
+        userInput,
+        conversationId,
+        (token) => {
+          // Update the message content with each token
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === tempResponseId 
+                ? { ...msg, content: msg.content + token } 
+                : msg
+            )
+          );
+        }
+      );
       
-      setMessages(prev => [...prev, assistantMessage]);
+      // Save conversation ID for future messages
+      setConversationId(newConversationId);
+    } catch (error) {
+      console.error('Error chatting with agent:', error);
+      
+      // Show error message
+      setMessages(prev => [
+        ...prev, 
+        {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: 'すみません、エラーが発生しました。もう一度お試しください。',
+          timestamp: new Date()
+        }
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   // Format timestamp to Japanese time

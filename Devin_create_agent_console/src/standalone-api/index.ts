@@ -1,5 +1,9 @@
 import { startStandaloneServer } from './server';
-import { logger } from '../mastra/utils/logger';
+// Use console logging instead of the logger module to avoid dependencies
+const logger = {
+  info: (message: string, meta?: any) => console.info(`[INFO] ${message}`, meta || ''),
+  error: (message: string, meta?: any) => console.error(`[ERROR] ${message}`, meta || '')
+};
 
 // Start the standalone API server
 try {

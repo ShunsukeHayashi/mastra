@@ -287,4 +287,72 @@ const contractApi = {
   },
 };
 
+// Agent chat API
+export const chatWithAgent = async (
+  message: string, 
+  conversationId?: string,
+  onToken?: (token: string) => void
+): Promise<{
+  conversationId: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/contracts/agent-chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        conversationId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    // Handle streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Stream not available');
+    }
+
+    let resultConversationId = conversationId;
+    
+    const decoder = new TextDecoder();
+    let done = false;
+    
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      if (streamDone) {
+        done = true;
+        break;
+      }
+      
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n\n').filter(line => line.trim().startsWith('data:'));
+      
+      for (const line of lines) {
+        const eventData = JSON.parse(line.replace('data:', '').trim());
+        
+        if (eventData.token && onToken) {
+          onToken(eventData.token);
+        }
+        
+        if (eventData.done) {
+          done = true;
+          if (eventData.conversationId) {
+            resultConversationId = eventData.conversationId;
+          }
+        }
+      }
+    }
+
+    return { conversationId: resultConversationId! };
+  } catch (error) {
+    console.error('Error in agent chat', error);
+    throw error;
+  }
+};
+
 export default contractApi;

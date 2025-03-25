@@ -1,8 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import { json } from 'body-parser';
 import routes from './routes';
-import { logger } from '../mastra/utils/logger';
+
+// Simple logger implementation
+const logger = {
+  info: (message: string, meta?: any) => console.info(`[INFO] ${message}`, meta || ''),
+  error: (message: string, meta?: any) => console.error(`[ERROR] ${message}`, meta || '')
+};
 
 const app = express();
 const PORT = process.env.STANDALONE_API_PORT || 4112;
@@ -21,7 +25,7 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
-app.use(json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -59,9 +63,6 @@ export const startStandaloneServer = () => {
   });
 };
 
-// If this file is run directly
-if (require.main === module) {
-  startStandaloneServer();
-}
+// This file is imported by index.ts which calls startStandaloneServer
 
 export default app;
