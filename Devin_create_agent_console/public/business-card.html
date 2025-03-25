@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>名刺処理システム</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .required::after {
+      content: "*";
+      color: #e74c3c;
+      margin-left: 5px;
+    }
+    .file-input {
+      margin-bottom: 10px;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      margin-top: 10px;
+      display: none;
+      border: 1px solid #ddd;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 30px;
+      display: none;
+    }
+    .result-content {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      white-space: pre-wrap;
+    }
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: bold;
+      display: none;
+    }
+    .error {
+      color: #e74c3c;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    .success {
+      color: #27ae60;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #3498db;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>名刺処理システム</h1>
+    <p>名刺をアップロードして、自動的にお礼メールを生成・送信します。</p>
+    
+    <form id="businessCardForm">
+      <div class="form-group">
+        <label for="businessCardImage" class="required">名刺画像</label>
+        <input type="file" id="businessCardImage" class="file-input" accept="image/*" required>
+        <img id="imagePreview" class="image-preview" alt="名刺プレビュー">
+        <div id="imageError" class="error"></div>
+      </div>
+      
+      <div class="form-group">
+        <label for="senderName" class="required">あなたの名前</label>
+        <input type="text" id="senderName" placeholder="山田 太郎" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="senderCompany" class="required">あなたの会社名</label>
+        <input type="text" id="senderCompany" placeholder="株式会社サンプル" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="senderPosition">あなたの役職</label>
+        <input type="text" id="senderPosition" placeholder="マーケティング部長">
+      </div>
+      
+      <div class="form-group">
+        <label for="senderEmail" class="required">あなたのメールアドレス</label>
+        <input type="email" id="senderEmail" placeholder="yamada@example.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="meetingContext">名刺交換の状況</label>
+        <input type="text" id="meetingContext" placeholder="先日の展示会でお会いした際に">
+      </div>
+      
+      <div class="form-group">
+        <label for="additionalNotes">追加メモ（メールに含める内容）</label>
+        <textarea id="additionalNotes" rows="3" placeholder="次回の打ち合わせについてなど"></textarea>
+      </div>
+      
+      <button type="submit" id="submitButton">処理開始</button>
+    </form>
+    
+    <div id="status" class="status">
+      <span class="loading"></span>
+      <span id="statusText">処理中...</span>
+    </div>
+    
+    <div id="result" class="result">
+      <h2>生成されたメール</h2>
+      <div class="form-group">
+        <label>宛先</label>
+        <div id="emailTo" class="result-content"></div>
+      </div>
+      <div class="form-group">
+        <label>件名</label>
+        <div id="emailSubject" class="result-content"></div>
+      </div>
+      <div class="form-group">
+        <label>本文</label>
+        <div id="emailBody" class="result-content"></div>
+      </div>
+      <div class="form-group">
+        <button id="sendButton" type="button">メールを送信</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('businessCardForm');
+      const imageInput = document.getElementById('businessCardImage');
+      const imagePreview = document.getElementById('imagePreview');
+      const imageError = document.getElementById('imageError');
+      const submitButton = document.getElementById('submitButton');
+      const status = document.getElementById('status');
+      const statusText = document.getElementById('statusText');
+      const result = document.getElementById('result');
+      const emailTo = document.getElementById('emailTo');
+      const emailSubject = document.getElementById('emailSubject');
+      const emailBody = document.getElementById('emailBody');
+      const sendButton = document.getElementById('sendButton');
+      
+      let workflowId = null;
+      let statusCheckInterval = null;
+      
+      // 画像プレビュー表示
+      imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+          imagePreview.style.display = 'none';
+          return;
+        }
+        
+        if (!file.type.match('image.*')) {
+          imageError.textContent = '画像ファイルを選択してください';
+          imagePreview.style.display = 'none';
+          return;
+        }
+        
+        imageError.textContent = '';
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      // フォーム送信
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // 入力チェック
+        if (!validateForm()) {
+          return;
+        }
+        
+        // 処理開始
+        submitButton.disabled = true;
+        status.style.display = 'block';
+        result.style.display = 'none';
+        
+        try {
+          // 画像をBase64エンコード
+          const file = imageInput.files[0];
+          const base64Image = await getBase64(file);
+          const base64Data = base64Image.split(',')[1]; // データ部分のみ取得
+          
+          // APIリクエスト
+          const response = await fetch('/api/business-card/process', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageBase64: base64Data,
+              senderName: document.getElementById('senderName').value,
+              senderCompany: document.getElementById('senderCompany').value,
+              senderPosition: document.getElementById('senderPosition').value || undefined,
+              senderEmail: document.getElementById('senderEmail').value,
+              meetingContext: document.getElementById('meetingContext').value || undefined,
+              additionalNotes: document.getElementById('additionalNotes').value || undefined,
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.error || '処理中にエラーが発生しました');
+          }
+          
+          // ワークフローID保存
+          workflowId = data.workflowId;
+          
+          // ステータス確認開始
+          statusText.textContent = '名刺情報を処理中...';
+          startStatusCheck();
+          
+        } catch (error) {
+          console.error('Error:', error);
+          statusText.textContent = `エラー: ${error.message}`;
+          submitButton.disabled = false;
+        }
+      });
+      
+      // ステータス確認
+      function startStatusCheck() {
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+        }
+        
+        statusCheckInterval = setInterval(async function() {
+          try {
+            const response = await fetch(`/api/business-card/status/${workflowId}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.error || 'ステータス取得中にエラーが発生しました');
+            }
+            
+            // ステータス表示更新
+            updateStatusDisplay(data);
+            
+            // 完了したら結果表示
+            if (data.status === 'completed') {
+              clearInterval(statusCheckInterval);
+              displayResult(data.result);
+            }
+            
+          } catch (error) {
+            console.error('Status check error:', error);
+            statusText.textContent = `エラー: ${error.message}`;
+            clearInterval(statusCheckInterval);
+            submitButton.disabled = false;
+          }
+        }, 2000); // 2秒ごとに確認
+      }
+      
+      // ステータス表示更新
+      function updateStatusDisplay(data) {
+        switch (data.currentStep) {
+          case 'extract-business-card-info':
+            statusText.textContent = '名刺情報を抽出中...';
+            break;
+          case 'generate-thank-you-email':
+            statusText.textContent = 'お礼メールを生成中...';
+            break;
+          case 'send-thank-you-email':
+            statusText.textContent = 'メール送信準備中...';
+            break;
+          default:
+            statusText.textContent = '処理中...';
+        }
+      }
+      
+      // 結果表示
+      function displayResult(result) {
+        if (!result || !result.emailDetails) {
+          statusText.textContent = 'メール生成に失敗しました';
+          submitButton.disabled = false;
+          return;
+        }
+        
+        // 結果表示
+        emailTo.textContent = result.emailDetails.to;
+        emailSubject.textContent = result.emailDetails.subject;
+        emailBody.textContent = result.emailDetails.body;
+        
+        // 結果エリア表示
+        status.style.display = 'none';
+        result.style.display = 'block';
+        
+        // フォームリセット
+        submitButton.disabled = false;
+      }
+      
+      // メール送信ボタン
+      sendButton.addEventListener('click', function() {
+        // 実際にはここでメール送信処理を行うが、
+        // 今回はすでにワークフロー内で送信済みなので成功メッセージのみ表示
+        alert('メールを送信しました');
+        
+        // 画面リセット
+        form.reset();
+        imagePreview.style.display = 'none';
+        result.style.display = 'none';
+      });
+      
+      // 入力チェック
+      function validateForm() {
+        let isValid = true;
+        
+        // 画像チェック
+        if (!imageInput.files || !imageInput.files[0]) {
+          imageError.textContent = '名刺画像を選択してください';
+          isValid = false;
+        } else {
+          imageError.textContent = '';
+        }
+        
+        // その他の必須項目チェック
+        const requiredFields = [
+          { id: 'senderName', message: '名前を入力してください' },
+          { id: 'senderCompany', message: '会社名を入力してください' },
+          { id: 'senderEmail', message: 'メールアドレスを入力してください' }
+        ];
+        
+        requiredFields.forEach(field => {
+          const element = document.getElementById(field.id);
+          const errorElement = document.getElementById(`${field.id}Error`) || 
+                              document.createElement('div');
+          
+          if (!element.value.trim()) {
+            if (!errorElement.id) {
+              errorElement.id = `${field.id}Error`;
+              errorElement.className = 'error';
+              element.parentNode.appendChild(errorElement);
+            }
+            errorElement.textContent = field.message;
+            isValid = false;
+          } else if (errorElement.id) {
+            errorElement.textContent = '';
+          }
+        });
+        
+        // メールアドレス形式チェック
+        const emailElement = document.getElementById('senderEmail');
+        const emailErrorElement = document.getElementById('senderEmailError') || 
+                                document.createElement('div');
+        
+        if (emailElement.value && !isValidEmail(emailElement.value)) {
+          if (!emailErrorElement.id) {
+            emailErrorElement.id = 'senderEmailError';
+            emailErrorElement.className = 'error';
+            emailElement.parentNode.appendChild(emailErrorElement);
+          }
+          emailErrorElement.textContent = '有効なメールアドレスを入力してください';
+          isValid = false;
+        }
+        
+        return isValid;
+      }
+      
+      // メールアドレス形式チェック
+      function isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+      
+      // 画像をBase64エンコード
+      function getBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

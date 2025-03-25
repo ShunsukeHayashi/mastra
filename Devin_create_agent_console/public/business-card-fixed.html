@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名刺処理システム</title>
+    <style>
+        body {
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .required:after {
+            content: " *";
+            color: #e74c3c;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .status-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-processing {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #ddd;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .step.active .step-number {
+            background-color: #3498db;
+            color: white;
+        }
+        .step.completed .step-number {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .preview-container {
+            margin-top: 10px;
+            max-width: 100%;
+            text-align: center;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .email-preview {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .demo-note {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>名刺処理システム</h1>
+        
+        <p>名刺をアップロードして、自動的にお礼メールを生成・送信します。</p>
+        
+        <div class="demo-note">
+            <strong>デモモード:</strong> 実際のメールは送信されません。名刺画像のアップロードはオプションです。
+        </div>
+        
+        <form id="businessCardForm">
+            <div class="form-group">
+                <label for="businessCardImage">名刺画像</label>
+                <input type="file" id="businessCardImage" accept="image/*">
+                <div class="preview-container">
+                    <img id="imagePreview" class="preview-image" alt="名刺プレビュー">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="senderName" class="required">あなたの名前</label>
+                <input type="text" id="senderName" value="山田太郎" required>
+                <div class="error-message" id="senderNameError">名前を入力してください</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="senderCompany" class="required">あなたの会社名</label>
+                <input type="text" id="senderCompany" value="株式会社サンプル" required>
+                <div class="error-message" id="senderCompanyError">会社名を入力してください</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="senderPosition">あなたの役職</label>
+                <input type="text" id="senderPosition" value="マーケティング部長">
+            </div>
+            
+            <div class="form-group">
+                <label for="senderEmail" class="required">あなたのメールアドレス</label>
+                <input type="email" id="senderEmail" value="yamada@example.com" required>
+                <div class="error-message" id="senderEmailError">有効なメールアドレスを入力してください</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="meetingContext">名刺交換の状況</label>
+                <input type="text" id="meetingContext" value="先日の展示会でお会いした際に" placeholder="例: 先日の展示会でお会いした際に">
+            </div>
+            
+            <div class="form-group">
+                <label for="additionalNotes">追加メモ (メールに含める内容)</label>
+                <textarea id="additionalNotes" placeholder="例: 次回の打ち合わせについてなど">次回の打ち合わせについてなど</textarea>
+            </div>
+            
+            <button type="submit" id="submitButton">処理開始</button>
+        </form>
+        
+        <div id="statusContainer" class="status-container">
+            <div id="processingSteps">
+                <div class="step" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-text">名刺情報を抽出中...</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-text">お礼メールを生成中...</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-text">メールを送信中...</div>
+                </div>
+            </div>
+            <div id="resultMessage"></div>
+            <div id="emailPreview" class="email-preview" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('businessCardForm');
+            const statusContainer = document.getElementById('statusContainer');
+            const resultMessage = document.getElementById('resultMessage');
+            const emailPreview = document.getElementById('emailPreview');
+            const imagePreview = document.getElementById('imagePreview');
+            const businessCardImage = document.getElementById('businessCardImage');
+            
+            // Image preview
+            businessCardImage.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                let isValid = true;
+                
+                // Check required fields
+                const requiredFields = [
+                    { id: 'senderName', errorId: 'senderNameError' },
+                    { id: 'senderCompany', errorId: 'senderCompanyError' },
+                    { id: 'senderEmail', errorId: 'senderEmailError' }
+                ];
+                
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    const errorElement = document.getElementById(field.errorId);
+                    
+                    if (!element.value.trim()) {
+                        errorElement.style.display = 'block';
+                        isValid = false;
+                    } else {
+                        errorElement.style.display = 'none';
+                    }
+                });
+                
+                // Validate email format
+                const emailField = document.getElementById('senderEmail');
+                const emailError = document.getElementById('senderEmailError');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                if (emailField.value.trim() && !emailRegex.test(emailField.value.trim())) {
+                    emailError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    return;
+                }
+                
+                // Show processing status
+                statusContainer.style.display = 'block';
+                statusContainer.className = 'status-container status-processing';
+                resultMessage.textContent = '名刺処理中です。しばらくお待ちください...';
+                emailPreview.style.display = 'none';
+                
+                // Reset steps
+                document.querySelectorAll('.step').forEach(step => {
+                    step.className = 'step';
+                });
+                
+                // Activate first step
+                document.getElementById('step1').className = 'step active';
+                
+                // For demo purposes, use a placeholder image if no file is selected
+                let base64Image = '';
+                const file = businessCardImage.files[0];
+                
+                if (file) {
+                    // Read file as base64
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        base64Image = e.target.result;
+                        sendFormData(base64Image);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Use a placeholder image for demo
+                    base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+                    sendFormData(base64Image);
+                }
+            });
+            
+            function sendFormData(base64Image) {
+                // Prepare JSON data
+                const jsonData = {
+                    imageBase64: base64Image,
+                    senderName: document.getElementById('senderName').value,
+                    senderCompany: document.getElementById('senderCompany').value,
+                    senderPosition: document.getElementById('senderPosition').value,
+                    senderEmail: document.getElementById('senderEmail').value,
+                    meetingContext: document.getElementById('meetingContext').value,
+                    additionalNotes: document.getElementById('additionalNotes').value
+                };
+                
+                // Send data to API
+                fetch('/api/business-card/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Start polling for status
+                        const workflowId = data.workflowId;
+                        pollWorkflowStatus(workflowId);
+                    } else {
+                        // Show error
+                        statusContainer.className = 'status-container status-error';
+                        resultMessage.textContent = data.error || 'エラーが発生しました。もう一度お試しください。';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusContainer.className = 'status-container status-error';
+                    resultMessage.textContent = 'サーバーとの通信中にエラーが発生しました。もう一度お試しください。';
+                });
+            }
+            
+            // Poll workflow status
+            function pollWorkflowStatus(workflowId) {
+                fetch(`/api/business-card/status/${workflowId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateStepStatus(data.currentStep);
+                            
+                            if (data.status === 'completed') {
+                                // Show success
+                                statusContainer.className = 'status-container status-success';
+                                resultMessage.textContent = '処理が完了しました！';
+                                
+                                // Show email preview if available
+                                if (data.result && data.result.emailDetails) {
+                                    emailPreview.textContent = `宛先: ${data.result.emailDetails.to}
+送信元: ${data.result.emailDetails.from}
+件名: ${data.result.emailDetails.subject}
+
+${data.result.emailDetails.body}`;
+                                    emailPreview.style.display = 'block';
+                                }
+                            } else if (data.status === 'failed') {
+                                // Show error
+                                statusContainer.className = 'status-container status-error';
+                                resultMessage.textContent = data.result?.message || 'エラーが発生しました。もう一度お試しください。';
+                            } else {
+                                // Continue polling
+                                setTimeout(() => pollWorkflowStatus(workflowId), 2000);
+                            }
+                        } else {
+                            // Show error
+                            statusContainer.className = 'status-container status-error';
+                            resultMessage.textContent = data.error || 'ステータスの取得中にエラーが発生しました。';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        statusContainer.className = 'status-container status-error';
+                        resultMessage.textContent = 'サーバーとの通信中にエラーが発生しました。';
+                    });
+            }
+            
+            // Update step status based on current step
+            function updateStepStatus(currentStep) {
+                // Reset all steps
+                document.querySelectorAll('.step').forEach(step => {
+                    step.className = 'step';
+                });
+                
+                // Mark steps as completed or active
+                if (currentStep === 'extract-business-card-info') {
+                    document.getElementById('step1').className = 'step active';
+                } else if (currentStep === 'generate-thank-you-email') {
+                    document.getElementById('step1').className = 'step completed';
+                    document.getElementById('step2').className = 'step active';
+                } else if (currentStep === 'send-thank-you-email') {
+                    document.getElementById('step1').className = 'step completed';
+                    document.getElementById('step2').className = 'step completed';
+                    document.getElementById('step3').className = 'step active';
+                } else if (!currentStep) {
+                    // All steps completed
+                    document.getElementById('step1').className = 'step completed';
+                    document.getElementById('step2').className = 'step completed';
+                    document.getElementById('step3').className = 'step completed';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

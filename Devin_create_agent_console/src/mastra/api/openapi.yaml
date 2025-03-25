@@ -1,0 +1,557 @@
+openapi: 3.0.0
+info:
+  title: Mastra API
+  description: API for interacting with Note.com, SerpAPI, and Business Card Processing services
+  version: 1.0.0
+servers:
+  - url: http://localhost:4111
+    description: Local development server
+paths:
+  /api/search-note:
+    post:
+      summary: Search for articles on Note.com
+      description: Search for articles on Note.com by keyword
+      operationId: searchNote
+      tags:
+        - Note.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - keyword
+              properties:
+                keyword:
+                  type: string
+                  description: Keyword to search for
+                size:
+                  type: integer
+                  description: Number of results to return
+                  default: 10
+                start:
+                  type: integer
+                  description: Starting index for pagination
+                  default: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  articles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        author:
+                          type: string
+                        url:
+                          type: string
+                        publishedAt:
+                          type: string
+                  totalCount:
+                    type: integer
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/note-details:
+    post:
+      summary: Get article details from Note.com
+      description: Get detailed information about a specific Note.com article
+      operationId: getNoteDetails
+      tags:
+        - Note.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - articleId
+              properties:
+                articleId:
+                  type: string
+                  description: ID of the article to retrieve
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  content:
+                    type: string
+                  author:
+                    type: string
+                  url:
+                    type: string
+                  publishedAt:
+                    type: string
+                  tags:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Article not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/serp-search:
+    post:
+      summary: Search the web using SerpAPI
+      description: Perform a Google search with Japanese-specific parameters using SerpAPI
+      operationId: serpSearch
+      tags:
+        - SerpAPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: Search query
+                num:
+                  type: integer
+                  description: Number of results to return
+                  default: 10
+                includeKnowledgeGraph:
+                  type: boolean
+                  description: Include knowledge graph in results
+                  default: true
+                includeRelatedQuestions:
+                  type: boolean
+                  description: Include related questions in results
+                  default: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organicResults:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        position:
+                          type: integer
+                        title:
+                          type: string
+                        link:
+                          type: string
+                        snippet:
+                          type: string
+                        source:
+                          type: string
+                  relatedQuestions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        question:
+                          type: string
+                        title:
+                          type: string
+                        link:
+                          type: string
+                  knowledgeGraph:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                      type:
+                        type: string
+                      description:
+                        type: string
+                      source:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          link:
+                            type: string
+                      attributes:
+                        type: object
+                  searchMetadata:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      totalResults:
+                        type: integer
+                      searchTime:
+                        type: number
+                      searchQuery:
+                        type: string
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/analyze-competitors:
+    post:
+      summary: Analyze competitor content
+      description: Analyze competitor content based on keyword search
+      operationId: analyzeCompetitors
+      tags:
+        - SerpAPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - keyword
+              properties:
+                keyword:
+                  type: string
+                  description: Keyword to analyze
+                siteFilter:
+                  type: string
+                  description: Domain to filter results by
+                numResults:
+                  type: integer
+                  description: Number of results to analyze
+                  default: 5
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  topCompetitors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        url:
+                          type: string
+                        snippet:
+                          type: string
+                        position:
+                          type: integer
+                  keywordInsights:
+                    type: object
+                    properties:
+                      searchVolume:
+                        type: string
+                      competitionLevel:
+                        type: string
+                      suggestedKeywords:
+                        type: array
+                        items:
+                          type: string
+                  analysisRecommendations:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/create-seo-plan:
+    post:
+      summary: Create SEO content plan
+      description: Create an SEO-optimized content plan based on keyword research
+      operationId: createSeoPlan
+      tags:
+        - SerpAPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mainKeyword
+              properties:
+                mainKeyword:
+                  type: string
+                  description: Main keyword for content plan
+                targetAudience:
+                  type: string
+                  description: Target audience for content
+                contentType:
+                  type: string
+                  description: Type of content (e.g., how-to, list article)
+                competitorUrls:
+                  type: array
+                  items:
+                    type: string
+                  description: URLs of competitor content to analyze
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  metaDescription:
+                    type: string
+                  headlineStructure:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        level:
+                          type: integer
+                        headline:
+                          type: string
+                        keyPoints:
+                          type: array
+                          items:
+                            type: string
+                  keywordsToInclude:
+                    type: array
+                    items:
+                      type: string
+                  contentRecommendations:
+                    type: array
+                    items:
+                      type: string
+                  estimatedWordCount:
+                    type: integer
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/business-card/process:
+    post:
+      summary: 名刺処理とお礼メール生成
+      description: 名刺画像を処理してお礼メールを生成・送信する
+      operationId: processBusinessCard
+      tags:
+        - BusinessCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - imageBase64
+                - senderName
+                - senderCompany
+                - senderEmail
+              properties:
+                imageBase64:
+                  type: string
+                  description: 名刺画像のBase64エンコードデータ
+                senderName:
+                  type: string
+                  description: 送信者の名前
+                senderCompany:
+                  type: string
+                  description: 送信者の会社名
+                senderPosition:
+                  type: string
+                  description: 送信者の役職
+                senderEmail:
+                  type: string
+                  description: 送信者のメールアドレス
+                meetingContext:
+                  type: string
+                  description: 名刺交換の状況や背景
+                additionalNotes:
+                  type: string
+                  description: メールに含める追加情報
+      responses:
+        '200':
+          description: 処理開始成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  workflowId:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: 入力エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/business-card/status/{workflowId}:
+    get:
+      summary: 名刺処理ワークフローのステータス取得
+      description: 名刺処理ワークフローの現在のステータスと結果を取得する
+      operationId: getWorkflowStatus
+      tags:
+        - BusinessCard
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          description: ワークフローID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  status:
+                    type: string
+                    enum: [running, completed, failed]
+                  currentStep:
+                    type: string
+                  result:
+                    type: object
+                    properties:
+                      emailDetails:
+                        type: object
+                        properties:
+                          subject:
+                            type: string
+                          body:
+                            type: string
+                          to:
+                            type: string
+                          from:
+                            type: string
+                      success:
+                        type: boolean
+                      message:
+                        type: string
+                      timestamp:
+                        type: string
+        '404':
+          description: ワークフローが見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        details:
+          type: string
