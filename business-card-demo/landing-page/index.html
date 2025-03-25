@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シュンスケ式プロンプトデザイン</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="font-sans bg-gray-50">
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="https://images.clickfunnels.com/cdn-cgi/image/width=128,quality=90,format=auto/https://images.clickfunnels.com/uploads/digital_asset/file/1581066/shunsuke-logo.png" alt="シュンスケ式プロンプトデザイン" class="h-12">
+      </div>
+      <div>
+        <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">ログイン</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+        <div class="md:w-1/2 mb-10 md:mb-0 md:pr-10 slide-in">
+          <h1 class="text-3xl md:text-4xl font-bold mb-6">ハヤシシュンスケ</h1>
+          <p class="text-lg text-gray-700 mb-8">
+            私は企業や個人が効果的なプロンプトを設計することでAIとの対話を最適化するのを助け、そうすることで生産性を向上させ、より良い結果を達成できるようにします。
+          </p>
+          <div class="mt-8">
+            <a href="#contact-form" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-md transition duration-300 ease-in-out transform hover:scale-105 pulse">
+              お問い合わせはコチラ
+            </a>
+          </div>
+        </div>
+        <div class="md:w-1/2 fade-in">
+          <img src="https://images.clickfunnels.com/cdn-cgi/image/width=1080,quality=90,format=auto/https://images.clickfunnels.com/uploads/digital_asset/file/1581067/shunsuke-profile.jpg" alt="ハヤシシュンスケ" class="rounded-lg shadow-xl max-w-full h-auto">
+        </div>
+      </div>
+    </section>
+
+    <section id="contact-form" class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-bold text-center mb-8 fade-in">お問い合わせ</h2>
+          <form id="lead-form" class="space-y-6 fade-in" style="animation-delay: 0.2s;">
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">お名前 <span class="text-red-500">*</span></label>
+              <input type="text" id="name" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
+              <input type="email" id="email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+            
+            <div>
+              <label for="company" class="block text-sm font-medium text-gray-700 mb-1">会社名</label>
+              <input type="text" id="company" name="company" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <div>
+              <label for="message" class="block text-sm font-medium text-gray-700 mb-1">お問い合わせ内容 <span class="text-red-500">*</span></label>
+              <textarea id="message" name="message" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required></textarea>
+            </div>
+            
+            <div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-md transition duration-300 ease-in-out transform hover:scale-105">
+                送信する
+              </button>
+            </div>
+          </form>
+          <div id="form-success" class="hidden mt-6 p-4 bg-green-50 text-green-700 rounded-md">
+            お問い合わせありがとうございます。近日中にご連絡いたします。
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <img src="https://images.clickfunnels.com/cdn-cgi/image/width=128,quality=90,format=auto/https://images.clickfunnels.com/uploads/digital_asset/file/1581066/shunsuke-logo.png" alt="シュンスケ式プロンプトデザイン" class="h-12 mb-4">
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">PAGES</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="hover:text-blue-400">Home</a></li>
+            <li><a href="#" class="hover:text-blue-400">About Us</a></li>
+            <li><a href="#" class="hover:text-blue-400">Contact Us</a></li>
+            <li><a href="#" class="hover:text-blue-400">Products</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">SOCIAL</h3>
+          <ul class="space-y-2">
+            <li><a href="https://www.youtube.com/@Hayashi_Shunsuke" class="hover:text-blue-400">Youtube</a></li>
+            <li><a href="https://x.com/Shunsuke__H__" class="hover:text-blue-400">X</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2025 シュンスケ式プロンプトデザイン. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
