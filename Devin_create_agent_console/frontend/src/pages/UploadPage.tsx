@@ -4,10 +4,11 @@ import ContractUploader from '../components/ContractUploader';
 
 const UploadPage: React.FC = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  // Keep setUploadError for the handler but remove unused state variable
+  const [, setUploadError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleUploadSuccess = (contractId: string) => {
+  const handleUploadSuccess = () => {
     setUploadSuccess(true);
     // Navigate to dashboard after successful upload
     setTimeout(() => {

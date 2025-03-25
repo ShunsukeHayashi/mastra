@@ -1,9 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import DemoInstructions from '../components/DemoInstructions';
 
 const HomePage: React.FC = () => {
   return (
     <div>
+      {/* Demo Instructions */}
+      <div className="container mx-auto px-4 py-6">
+        <DemoInstructions />
+      </div>
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
         <div className="container mx-auto px-4">

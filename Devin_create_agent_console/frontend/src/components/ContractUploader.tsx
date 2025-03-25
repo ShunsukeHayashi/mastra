@@ -117,9 +117,9 @@ const ContractUploader: React.FC<ContractUploaderProps> = ({
   };
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md">
+    <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-md">
       <div 
-        className={`border-2 border-dashed rounded-lg p-8 text-center ${isDragging ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400'}`}
+        className={`border-2 border-dashed rounded-lg p-4 sm:p-6 md:p-8 text-center ${isDragging ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -134,31 +134,33 @@ const ContractUploader: React.FC<ContractUploaderProps> = ({
         
         {!file ? (
           <div>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-gray-400 mb-3 sm:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="text-lg mb-2">ここにファイルをドラッグ＆ドロップ</p>
-            <p className="text-gray-500 mb-4">または</p>
+            <p className="text-base sm:text-lg mb-2">ここにファイルをドラッグ＆ドロップ</p>
+            <p className="text-sm sm:text-base text-gray-500 mb-3 sm:mb-4">または</p>
             <button 
               onClick={handleSelectFileClick}
-              className="btn-primary"
+              className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm sm:text-base"
             >
               ファイルを選択
             </button>
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">
               サポートされているファイル形式: PDF, DOC, DOCX
             </p>
           </div>
         ) : (
           <div>
-            <div className="flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex flex-col sm:flex-row items-center justify-center mb-3 sm:mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-primary-600 mb-2 sm:mb-0 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span className="text-lg font-medium">{file.name}</span>
+              <span className="text-base sm:text-lg font-medium text-center sm:text-left break-all">
+                {file.name.length > 25 ? `${file.name.substring(0, 25)}...` : file.name}
+              </span>
             </div>
             
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
               {(file.size / 1024 / 1024).toFixed(2)} MB
             </p>
             
@@ -170,19 +172,19 @@ const ContractUploader: React.FC<ContractUploaderProps> = ({
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-gray-600">アップロード中... {uploadProgress}%</p>
+                <p className="text-xs sm:text-sm text-gray-600">アップロード中... {uploadProgress}%</p>
               </div>
             ) : (
-              <div className="flex space-x-4 justify-center">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
                 <button 
                   onClick={() => setFile(null)}
-                  className="btn-secondary"
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2 px-4 rounded-md transition-colors text-sm sm:text-base w-full sm:w-auto"
                 >
                   キャンセル
                 </button>
                 <button 
                   onClick={handleUpload}
-                  className="btn-primary"
+                  className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm sm:text-base w-full sm:w-auto"
                 >
                   アップロード
                 </button>
@@ -194,11 +196,11 @@ const ContractUploader: React.FC<ContractUploaderProps> = ({
       
       {uploadError && (
         <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md">
-          <div className="flex">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <div className="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            {uploadError}
+            <span className="text-sm">{uploadError}</span>
           </div>
         </div>
       )}
