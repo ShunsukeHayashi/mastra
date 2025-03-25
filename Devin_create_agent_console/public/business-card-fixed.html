@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>名刺処理システム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .step-item {
+      position: relative;
+    }
+    .step-item:not(:last-child):after {
+      content: '';
+      position: absolute;
+      right: -50%;
+      top: 15px;
+      transform: translateY(-50%);
+      width: 100%;
+      height: 2px;
+      background-color: #e5e7eb;
+      z-index: 0;
+    }
+    .step-item.active:not(:last-child):after {
+      background-color: #3b82f6;
+    }
+    .step-item.completed .step-counter {
+      background-color: #10b981;
+    }
+    .step-counter {
+      z-index: 1;
+      position: relative;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">名刺処理システム</h1>
+      <p class="text-gray-600">名刺をアップロードして自動的にお礼メールを生成します</p>
+    </header>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div class="flex justify-between mb-8 px-2">
+        <div class="step-item flex flex-col items-center w-1/3" id="step-1">
+          <div class="step-counter w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 font-semibold mb-2">1</div>
+          <div class="text-sm text-center">情報抽出</div>
+        </div>
+        <div class="step-item flex flex-col items-center w-1/3" id="step-2">
+          <div class="step-counter w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 font-semibold mb-2">2</div>
+          <div class="text-sm text-center">メール生成</div>
+        </div>
+        <div class="step-item flex flex-col items-center w-1/3" id="step-3">
+          <div class="step-counter w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 font-semibold mb-2">3</div>
+          <div class="text-sm text-center">メール送信</div>
+        </div>
+      </div>
+
+      <form id="business-card-form" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-6">
+            <div>
+              <label for="image-upload" class="block text-sm font-medium text-gray-700 mb-1">名刺画像（オプション）</label>
+              <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div class="space-y-1 text-center">
+                  <div id="image-preview-container" class="hidden mb-3">
+                    <img id="image-preview" class="mx-auto h-32 object-contain" src="#" alt="名刺プレビュー">
+                  </div>
+                  <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <div class="flex text-sm text-gray-600">
+                    <label for="image-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                      <span>ファイルをアップロード</span>
+                      <input id="image-upload" name="image-upload" type="file" accept="image/*" class="sr-only">
+                    </label>
+                    <p class="pl-1">またはドラッグ＆ドロップ</p>
+                  </div>
+                  <p class="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="sender-name" class="block text-sm font-medium text-gray-700">お名前 <span class="text-red-500">*</span></label>
+              <input type="text" name="sender-name" id="sender-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" placeholder="山田 太郎" required>
+            </div>
+
+            <div>
+              <label for="sender-company" class="block text-sm font-medium text-gray-700">会社名 <span class="text-red-500">*</span></label>
+              <input type="text" name="sender-company" id="sender-company" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" placeholder="株式会社サンプル" required>
+            </div>
+
+            <div>
+              <label for="sender-position" class="block text-sm font-medium text-gray-700">役職</label>
+              <input type="text" name="sender-position" id="sender-position" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" placeholder="営業部長">
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div>
+              <label for="sender-email" class="block text-sm font-medium text-gray-700">メールアドレス <span class="text-red-500">*</span></label>
+              <input type="email" name="sender-email" id="sender-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" placeholder="yamada@example.com" required>
+            </div>
+
+            <div>
+              <label for="meeting-context" class="block text-sm font-medium text-gray-700">名刺交換の状況</label>
+              <textarea name="meeting-context" id="meeting-context" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" placeholder="例：先日の展示会でお話しさせていただいた際"></textarea>
+            </div>
+
+            <div>
+              <label for="additional-notes" class="block text-sm font-medium text-gray-700">追加情報</label>
+              <textarea name="additional-notes" id="additional-notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" placeholder="メールに含めたい追加情報があれば入力してください"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            処理開始
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div id="processing-status" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+      <h2 class="text-xl font-semibold mb-4">処理状況</h2>
+      <div id="status-message" class="mb-4 p-4 bg-blue-50 text-blue-700 rounded-md">
+        名刺情報を処理中...
+      </div>
+      <div class="space-y-2" id="status-details">
+        <!-- Status details will be inserted here -->
+      </div>
+    </div>
+
+    <div id="email-preview" class="bg-white rounded-lg shadow-md p-6 hidden">
+      <h2 class="text-xl font-semibold mb-4">生成されたメール</h2>
+      <div class="border rounded-md p-4 bg-gray-50">
+        <div class="mb-4">
+          <p><strong>宛先:</strong> <span id="email-to"></span></p>
+          <p><strong>差出人:</strong> <span id="email-from"></span></p>
+          <p><strong>件名:</strong> <span id="email-subject"></span></p>
+        </div>
+        <div class="border-t pt-4">
+          <pre id="email-body" class="whitespace-pre-wrap font-sans text-sm"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('business-card-form');
+      const imageUpload = document.getElementById('image-upload');
+      const imagePreview = document.getElementById('image-preview');
+      const imagePreviewContainer = document.getElementById('image-preview-container');
+      const processingStatus = document.getElementById('processing-status');
+      const statusMessage = document.getElementById('status-message');
+      const statusDetails = document.getElementById('status-details');
+      const emailPreview = document.getElementById('email-preview');
+      
+      // Step indicators
+      const step1 = document.getElementById('step-1');
+      const step2 = document.getElementById('step-2');
+      const step3 = document.getElementById('step-3');
+      
+      let workflowId = null;
+      let pollingInterval = null;
+
+      // Image preview
+      imageUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            imagePreviewContainer.classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        const senderName = document.getElementById('sender-name').value;
+        const senderCompany = document.getElementById('sender-company').value;
+        const senderEmail = document.getElementById('sender-email').value;
+        
+        if (!senderName || !senderCompany || !senderEmail) {
+          alert('必須項目を入力してください');
+          return;
+        }
+        
+        // Get form data
+        const senderPosition = document.getElementById('sender-position').value;
+        const meetingContext = document.getElementById('meeting-context').value;
+        const additionalNotes = document.getElementById('additional-notes').value;
+        
+        // Get image data if available
+        let imageBase64 = null;
+        if (imageUpload.files.length > 0) {
+          const file = imageUpload.files[0];
+          imageBase64 = await readFileAsBase64(file);
+        }
+        
+        // Show processing status
+        processingStatus.classList.remove('hidden');
+        statusMessage.textContent = '名刺処理ワークフローを開始しています...';
+        statusDetails.innerHTML = '<div class="animate-pulse">処理中...</div>';
+        
+        // Set step 1 as active
+        step1.classList.add('active');
+        
+        try {
+          // Submit data to API
+          const response = await fetch('/api/business-card/process', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageBase64,
+              senderName,
+              senderCompany,
+              senderPosition,
+              senderEmail,
+              meetingContext,
+              additionalNotes
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            workflowId = data.workflowId;
+            statusMessage.textContent = data.message;
+            
+            // Start polling for status updates
+            startPolling();
+          } else {
+            statusMessage.textContent = `エラー: ${data.error}`;
+            statusMessage.classList.remove('bg-blue-50', 'text-blue-700');
+            statusMessage.classList.add('bg-red-50', 'text-red-700');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          statusMessage.textContent = `エラー: ${error.message || '不明なエラーが発生しました'}`;
+          statusMessage.classList.remove('bg-blue-50', 'text-blue-700');
+          statusMessage.classList.add('bg-red-50', 'text-red-700');
+        }
+      });
+
+      // Function to read file as base64
+      function readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Function to start polling for status updates
+      function startPolling() {
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
+        
+        pollingInterval = setInterval(checkStatus, 1000);
+      }
+
+      // Function to check workflow status
+      async function checkStatus() {
+        if (!workflowId) return;
+        
+        try {
+          const response = await fetch(`/api/business-card/status/${workflowId}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            updateStatusUI(data);
+            
+            if (data.status === 'completed') {
+              clearInterval(pollingInterval);
+              showEmailPreview(data.result);
+            }
+          }
+        } catch (error) {
+          console.error('Error checking status:', error);
+        }
+      }
+
+      // Function to update status UI
+      function updateStatusUI(data) {
+        // Update step indicators
+        step1.classList.remove('active', 'completed');
+        step2.classList.remove('active', 'completed');
+        step3.classList.remove('active', 'completed');
+        
+        if (data.currentStep === 'extract-business-card-info') {
+          statusMessage.textContent = '名刺から情報を抽出しています...';
+          step1.classList.add('active');
+        } else if (data.currentStep === 'generate-thank-you-email') {
+          statusMessage.textContent = 'お礼メールを生成しています...';
+          step1.classList.add('completed');
+          step2.classList.add('active');
+        } else if (data.currentStep === 'send-thank-you-email') {
+          statusMessage.textContent = 'メールを送信しています...';
+          step1.classList.add('completed');
+          step2.classList.add('completed');
+          step3.classList.add('active');
+        }
+        
+        if (data.status === 'completed') {
+          step1.classList.add('completed');
+          step2.classList.add('completed');
+          step3.classList.add('completed');
+          
+          statusMessage.textContent = data.result.message || 'プロセスが完了しました';
+          statusMessage.classList.remove('bg-blue-50', 'text-blue-700');
+          statusMessage.classList.add('bg-green-50', 'text-green-700');
+        }
+      }
+
+      // Function to show email preview
+      function showEmailPreview(result) {
+        if (!result || !result.emailDetails) return;
+        
+        const { emailDetails } = result;
+        
+        document.getElementById('email-to').textContent = emailDetails.to;
+        document.getElementById('email-from').textContent = emailDetails.from;
+        document.getElementById('email-subject').textContent = emailDetails.subject;
+        document.getElementById('email-body').textContent = emailDetails.body;
+        
+        emailPreview.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
