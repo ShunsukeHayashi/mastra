@@ -11,19 +11,23 @@ const DemoInstructions: React.FC = () => {
         デモモード
       </h3>
       <p className="text-blue-700 mb-3 text-sm sm:text-base">
-        このデモでは、契約書管理システムの主要機能をお試しいただけます。実際のデータは保存されません。
+        このデモでは、Mastraフレームワークを活用した契約書管理AIエージェントの主要機能をお試しいただけます。実際のデータは保存されません。
       </p>
       <div className="space-y-2 text-sm text-blue-600">
         <div className="flex items-start">
           <span className="font-medium mr-2">1.</span>
-          <span>「アップロード」ページから契約書をアップロード（任意のPDFファイル）</span>
+          <span>ホームページのAIエージェントチャットで契約書に関する質問や分析依頼</span>
         </div>
         <div className="flex items-start">
           <span className="font-medium mr-2">2.</span>
-          <span>「ダッシュボード」でアップロードした契約書の自動分析結果を確認</span>
+          <span>「アップロード」ページから契約書をアップロード（任意のPDFファイル）</span>
         </div>
         <div className="flex items-start">
           <span className="font-medium mr-2">3.</span>
+          <span>「ダッシュボード」でアップロードした契約書の自動分析結果を確認</span>
+        </div>
+        <div className="flex items-start">
+          <span className="font-medium mr-2">4.</span>
           <span>承認フローのシミュレーションを体験</span>
         </div>
       </div>

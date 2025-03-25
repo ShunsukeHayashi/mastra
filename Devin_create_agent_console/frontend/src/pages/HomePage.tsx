@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DemoInstructions from '../components/DemoInstructions';
+import AIAgentChat from '../components/AIAgentChat';
 
 const HomePage: React.FC = () => {
   return (
@@ -9,6 +10,20 @@ const HomePage: React.FC = () => {
       <div className="container mx-auto px-4 py-6">
         <DemoInstructions />
       </div>
+
+      {/* AI Agent Demo Section */}
+      <section className="py-8 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-6 text-center">Mastra AIエージェントデモ</h2>
+            <p className="text-center mb-8 text-gray-600">
+              Mastraフレームワークを活用したAIエージェントをお試しください。<br />
+              契約書に関する質問や分析依頼などをチャットで行えます。
+            </p>
+            <AIAgentChat />
+          </div>
+        </div>
+      </section>
       
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
