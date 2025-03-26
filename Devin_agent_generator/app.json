@@ -1,0 +1,27 @@
+{
+  "name": "mastra-agent-generator",
+  "description": "A system for dynamically generating Mastra agents, workflows, and tools",
+  "repository": "https://github.com/ShunsukeHayashi/mastra",
+  "keywords": ["mastra", "agent", "generator", "ai", "workflow"],
+  "env": {
+    "NODE_ENV": {
+      "description": "Environment for the application",
+      "value": "production"
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API key for agent generation",
+      "required": true
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  }
+}
