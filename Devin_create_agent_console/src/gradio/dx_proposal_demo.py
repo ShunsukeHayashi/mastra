@@ -8,7 +8,7 @@ import random
 from typing import Dict, List, Any, Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from gradio.pdf_export import generate_pdf_from_proposal
+from pdf_export import generate_pdf_from_proposal
 
 API_BASE_URL = "http://127.0.0.1:4111/api"
 
@@ -523,7 +523,8 @@ def check_and_format_proposal(workflow_id: str) -> Dict[str, Any]:
                 formatted_proposal = format_proposal(proposal_data)
                 return {
                     "status": "completed",
-                    "proposal": formatted_proposal
+                    "proposal": formatted_proposal,
+                    "raw_proposal": proposal_data
                 }
             elif result.get("status") == "failed":
                 return {
@@ -575,7 +576,8 @@ def check_and_format_proposal(workflow_id: str) -> Dict[str, Any]:
     formatted_proposal = format_proposal(sample_data)
     return {
         "status": "completed",
-        "proposal": formatted_proposal
+        "proposal": formatted_proposal,
+        "raw_proposal": sample_data.get("proposal", {})
     }
 
 def create_interface():

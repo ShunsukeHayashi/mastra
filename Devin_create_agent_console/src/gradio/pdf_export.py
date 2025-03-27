@@ -1,11 +1,33 @@
 import os
 import tempfile
-import subprocess
+import json
 from typing import Dict, Any, Optional
+import base64
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+
+try:
+    japanese_fonts = [
+        ('/usr/share/fonts/truetype/fonts-japanese-gothic.ttf', 'Japanese'),
+        ('/usr/share/fonts/truetype/ipafont-gothic/ipag.ttf', 'IPAGothic'),
+        ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', 'NotoSans')
+    ]
+    
+    for font_path, font_name in japanese_fonts:
+        if os.path.exists(font_path):
+            pdfmetrics.registerFont(TTFont(font_name, font_path))
+            break
+except Exception as e:
+    print(f"Warning: Could not register Japanese font: {e}")
 
 def generate_pdf_from_proposal(proposal: Dict[str, Any], output_path: Optional[str] = None) -> str:
     """
-    Generate a PDF file from a DX proposal using Node.js
+    Generate a PDF file from a DX proposal using ReportLab
     
     Args:
         proposal: DX proposal object
@@ -14,297 +36,261 @@ def generate_pdf_from_proposal(proposal: Dict[str, Any], output_path: Optional[s
     Returns:
         Path to the generated PDF file
     """
-    with tempfile.NamedTemporaryFile(suffix='.json', mode='w', delete=False) as temp_json:
-        import json
-        json.dump(proposal, temp_json)
-        temp_json_path = temp_json.name
-    
     if not output_path:
         fd, output_path = tempfile.mkstemp(suffix='.pdf')
         os.close(fd)
     
-    with tempfile.NamedTemporaryFile(suffix='.js', mode='w', delete=False) as temp_script:
-        temp_script.write("""
-const fs = require('fs');
-const path = require('path');
-const PDFDocument = require('pdfkit');
-
-// Read the proposal JSON
-const proposalJson = fs.readFileSync(process.argv[2], 'utf8');
-const proposal = JSON.parse(proposalJson);
-const outputPath = process.argv[3];
-
-// Create a document
-const doc = new PDFDocument({
-  size: 'A4',
-  margin: 50,
-  info: {
-    Title: `${proposal.companyInfo.name} DX提案書`,
-    Author: 'Mastra DX提案書ジェネレーター',
-    Subject: 'デジタルトランスフォーメーション提案書',
-    Keywords: 'DX, デジタルトランスフォーメーション, 提案書',
-  }
-});
-
-// Pipe its output to a file
-const stream = fs.createWriteStream(outputPath);
-doc.pipe(stream);
-
-// Set font for Japanese text
-doc.font('Helvetica');
-
-// Add header
-doc.fontSize(24)
-  .text('デジタルトランスフォーメーション提案書', { align: 'center' })
-  .moveDown(0.5);
-
-// Add company name
-doc.fontSize(18)
-  .text(`${proposal.companyInfo.name} 様`, { align: 'center' })
-  .moveDown(1);
-
-// Add date
-const today = new Date();
-const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-doc.fontSize(12)
-  .text(`作成日: ${dateStr}`, { align: 'right' })
-  .moveDown(2);
-
-// Add executive summary
-addSection(doc, '1. エグゼクティブサマリー', proposal.executiveSummary);
-
-// Add company info
-addSection(doc, '2. 企業情報', `
-業種: ${proposal.companyInfo.industry}
-概要: ${proposal.companyInfo.description}
-主要製品/サービス: ${proposal.companyInfo.products?.join(', ') || '情報なし'}
-`);
-
-// Add business challenges
-addSection(doc, '3. ビジネス課題', formatBusinessChallenges(proposal.businessChallenges));
-
-// Add DX opportunities
-addSection(doc, '4. DX機会', formatOpportunities(proposal.opportunities));
-
-// Add implementation roadmap
-addSection(doc, '5. 実装ロードマップ', formatRoadmap(proposal.implementationRoadmap));
-
-// Add investment summary
-addSection(doc, '6. 投資概要', formatInvestmentSummary(proposal.investmentSummary));
-
-// Add conclusion
-addSection(doc, '7. 結論', proposal.conclusion);
-
-// Add footer
-const pageCount = doc.bufferedPageRange().count;
-for (let i = 0; i < pageCount; i++) {
-  doc.switchToPage(i);
-  
-  // Save the current position
-  const originalY = doc.y;
-  
-  // Move to the bottom of the page
-  doc.fontSize(10)
-    .text(
-      '© Mastra DX提案書ジェネレーター',
-      50,
-      doc.page.height - 50,
-      { align: 'center', width: doc.page.width - 100 }
-    );
-  
-  // Add page number
-  doc.text(
-    `${i + 1} / ${pageCount}`,
-    50,
-    doc.page.height - 30,
-    { align: 'center', width: doc.page.width - 100 }
-  );
-  
-  // Restore the position
-  doc.y = originalY;
-}
-
-// Finalize the PDF and end the stream
-doc.end();
-
-/**
- * Add a section to the PDF document
- */
-function addSection(doc, title, content) {
-  // Add section title
-  doc.fontSize(16)
-    .fillColor('#1E3A8A')
-    .text(title, { underline: true })
-    .moveDown(0.5);
-
-  // Add section content
-  doc.fontSize(12)
-    .fillColor('black')
-    .text(content, { align: 'justify' })
-    .moveDown(1);
-}
-
-/**
- * Format business challenges for PDF
- */
-function formatBusinessChallenges(challenges) {
-  if (!challenges || challenges.length === 0) {
-    return '情報なし';
-  }
-
-  if (typeof challenges[0] === 'string') {
-    return challenges.map(challenge => `• ${challenge}`).join('\\n\\n');
-  }
-
-  return challenges.map(challenge => {
-    return `• ${challenge.title || ''}
-  ${challenge.description || ''}
-  ${challenge.impact ? `影響: ${challenge.impact}` : ''}`;
-  }).join('\\n\\n');
-}
-
-/**
- * Format DX opportunities for PDF
- */
-function formatOpportunities(opportunities) {
-  if (!opportunities || opportunities.length === 0) {
-    return '情報なし';
-  }
-
-  return opportunities.map((opp, index) => {
-    let text = `機会 ${index + 1}: ${opp.title || opp.area || ''}\\n`;
-    
-    if (opp.description) {
-      text += `  説明: ${opp.description}\\n`;
-    } else if (opp.currentState && opp.targetState) {
-      text += `  現状: ${opp.currentState}\\n`;
-      text += `  目標: ${opp.targetState}\\n`;
-    }
-    
-    if (opp.benefits && opp.benefits.length > 0) {
-      text += `  メリット: ${opp.benefits.join(', ')}\\n`;
-    }
-    
-    if (opp.implementation) {
-      text += `  実装: ${opp.implementation}\\n`;
-    }
-    
-    if (opp.timeline) {
-      text += `  タイムライン: ${opp.timeline}\\n`;
-    }
-    
-    if (opp.cost) {
-      text += `  コスト: ${opp.cost}\\n`;
-    }
-    
-    if (opp.priority) {
-      text += `  優先度: ${opp.priority}\\n`;
-    }
-    
-    if (opp.impact) {
-      text += `  効果: ${opp.impact}\\n`;
-    }
-    
-    if (opp.technologies && opp.technologies.length > 0) {
-      text += `  技術: ${opp.technologies.join(', ')}\\n`;
-    }
-    
-    return text;
-  }).join('\\n');
-}
-
-/**
- * Format implementation roadmap for PDF
- */
-function formatRoadmap(roadmap) {
-  if (!roadmap || roadmap.length === 0) {
-    return '情報なし';
-  }
-
-  return roadmap.map((phase, index) => {
-    let text = `${phase.phase || `フェーズ ${index + 1}`}\\n`;
-    
-    if (phase.description) {
-      text += `  説明: ${phase.description}\\n`;
-    }
-    
-    if (phase.timeline) {
-      text += `  期間: ${phase.timeline}\\n`;
-    }
-    
-    if (phase.deliverables && phase.deliverables.length > 0) {
-      text += `  成果物:\\n`;
-      phase.deliverables.forEach((item) => {
-        text += `    • ${item}\\n`;
-      });
-    } else if (phase.tasks && phase.tasks.length > 0) {
-      text += `  タスク:\\n`;
-      phase.tasks.forEach((item) => {
-        text += `    • ${item}\\n`;
-      });
-    }
-    
-    if (phase.milestones && phase.milestones.length > 0) {
-      text += `  マイルストーン:\\n`;
-      phase.milestones.forEach((item) => {
-        text += `    • ${item}\\n`;
-      });
-    }
-    
-    if (phase.resources) {
-      text += `  リソース: ${phase.resources}\\n`;
-    }
-    
-    return text;
-  }).join('\\n\\n');
-}
-
-/**
- * Format investment summary for PDF
- */
-function formatInvestmentSummary(investment) {
-  if (!investment) {
-    return '情報なし';
-  }
-
-  let text = '';
-  
-  if (investment.totalCost) {
-    text += `総コスト: ${investment.totalCost}\\n\\n`;
-  }
-  
-  if (investment.breakdown && Object.keys(investment.breakdown).length > 0) {
-    text += `内訳:\\n`;
-    for (const [key, value] of Object.entries(investment.breakdown)) {
-      text += `  • ${key}: ${value}\\n`;
-    }
-    text += '\\n';
-  }
-  
-  if (investment.roi) {
-    text += `ROI: ${investment.roi}\\n\\n`;
-  }
-  
-  if (investment.paybackPeriod) {
-    text += `回収期間: ${investment.paybackPeriod}\\n`;
-  }
-  
-  return text;
-}
-        """)
-        temp_script_path = temp_script.name
-    
     try:
-        subprocess.run(['node', temp_script_path, temp_json_path, output_path], check=True)
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=A4,
+            rightMargin=50,
+            leftMargin=50,
+            topMargin=50,
+            bottomMargin=50,
+            title=f"{proposal.get('companyInfo', {}).get('name', '企業')} DX提案書",
+            author="Mastra DX提案書ジェネレーター",
+            subject="デジタルトランスフォーメーション提案書"
+        )
         
-        os.unlink(temp_json_path)
-        os.unlink(temp_script_path)
+        styles = getSampleStyleSheet()
+        
+        styles.add(ParagraphStyle(
+            name='DXTitle',
+            parent=styles['Title'],
+            alignment=TA_CENTER,
+            fontSize=24,
+            fontName='Helvetica-Bold'
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='Subtitle',
+            parent=styles['Heading2'],
+            alignment=TA_CENTER,
+            fontSize=18,
+            fontName='Helvetica-Bold'
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='SectionTitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            fontName='Helvetica-Bold',
+            textColor=colors.navy
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='Normal-JP',
+            parent=styles['Normal'],
+            fontSize=12,
+            fontName='Helvetica',
+            alignment=TA_LEFT,
+            leading=14
+        ))
+        
+        content = []
+        
+        content.append(Paragraph("デジタルトランスフォーメーション提案書", styles['DXTitle']))
+        content.append(Spacer(1, 12))
+        
+        company_name = proposal.get('companyInfo', {}).get('name', '企業')
+        content.append(Paragraph(f"{company_name} 様", styles['Subtitle']))
+        content.append(Spacer(1, 12))
+        
+        from datetime import datetime
+        today = datetime.now()
+        date_str = f"作成日: {today.year}年{today.month}月{today.day}日"
+        date_style = ParagraphStyle(
+            name='Date',
+            parent=styles['Normal'],
+            alignment=TA_RIGHT,
+            fontSize=12
+        )
+        content.append(Paragraph(date_str, date_style))
+        content.append(Spacer(1, 24))
+        
+        content.append(Paragraph("1. エグゼクティブサマリー", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        content.append(Paragraph(proposal.get('executiveSummary', '情報なし'), styles['Normal-JP']))
+        content.append(Spacer(1, 12))
+        
+        content.append(Paragraph("2. 企業情報", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        
+        company_info = proposal.get('companyInfo', {})
+        company_info_text = f"""
+        業種: {company_info.get('industry', '情報なし')}<br/>
+        概要: {company_info.get('description', '情報なし')}<br/>
+        主要製品/サービス: {', '.join(company_info.get('products', [])) if company_info.get('products') else '情報なし'}<br/>
+        """
+        content.append(Paragraph(company_info_text, styles['Normal-JP']))
+        content.append(Spacer(1, 12))
+        
+        content.append(Paragraph("3. ビジネス課題", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        
+        challenges = proposal.get('businessChallenges', [])
+        if challenges and len(challenges) > 0:
+            if isinstance(challenges[0], str):
+                challenges_text = '<br/>'.join([f"• {challenge}" for challenge in challenges])
+                content.append(Paragraph(challenges_text, styles['Normal-JP']))
+            else:
+                challenges_list = []
+                for challenge in challenges:
+                    challenge_text = f"• {challenge.get('title', '')}<br/>"
+                    if challenge.get('description'):
+                        challenge_text += f"  {challenge.get('description')}<br/>"
+                    if challenge.get('impact'):
+                        challenge_text += f"  影響: {challenge.get('impact')}<br/>"
+                    challenges_list.append(challenge_text)
+                
+                challenges_text = '<br/>'.join(challenges_list)
+                content.append(Paragraph(challenges_text, styles['Normal-JP']))
+        else:
+            content.append(Paragraph("情報なし", styles['Normal-JP']))
+        content.append(Spacer(1, 12))
+        
+        content.append(Paragraph("4. DX機会", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        
+        opportunities = proposal.get('opportunities', [])
+        if opportunities and len(opportunities) > 0:
+            opportunities_text = ""
+            for i, opp in enumerate(opportunities):
+                opportunities_text += f"機会 {i+1}: {opp.get('title', opp.get('area', ''))}<br/>"
+                
+                if opp.get('description'):
+                    opportunities_text += f"  説明: {opp.get('description')}<br/>"
+                elif opp.get('currentState') and opp.get('targetState'):
+                    opportunities_text += f"  現状: {opp.get('currentState')}<br/>"
+                    opportunities_text += f"  目標: {opp.get('targetState')}<br/>"
+                
+                if opp.get('benefits'):
+                    opportunities_text += f"  メリット: {', '.join(opp.get('benefits'))}<br/>"
+                
+                if opp.get('implementation'):
+                    opportunities_text += f"  実装: {opp.get('implementation')}<br/>"
+                
+                if opp.get('timeline'):
+                    opportunities_text += f"  タイムライン: {opp.get('timeline')}<br/>"
+                
+                if opp.get('cost'):
+                    opportunities_text += f"  コスト: {opp.get('cost')}<br/>"
+                
+                if opp.get('priority'):
+                    opportunities_text += f"  優先度: {opp.get('priority')}<br/>"
+                
+                if opp.get('impact'):
+                    opportunities_text += f"  効果: {opp.get('impact')}<br/>"
+                
+                if opp.get('technologies'):
+                    opportunities_text += f"  技術: {', '.join(opp.get('technologies'))}<br/>"
+                
+                opportunities_text += "<br/>"
+            
+            content.append(Paragraph(opportunities_text, styles['Normal-JP']))
+        else:
+            content.append(Paragraph("情報なし", styles['Normal-JP']))
+        content.append(Spacer(1, 12))
+        
+        content.append(Paragraph("5. 実装ロードマップ", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        
+        roadmap = proposal.get('implementationRoadmap', [])
+        if roadmap and len(roadmap) > 0:
+            roadmap_text = ""
+            for i, phase in enumerate(roadmap):
+                roadmap_text += f"{phase.get('phase', f'フェーズ {i+1}')}<br/>"
+                
+                if phase.get('description'):
+                    roadmap_text += f"  説明: {phase.get('description')}<br/>"
+                
+                if phase.get('timeline'):
+                    roadmap_text += f"  期間: {phase.get('timeline')}<br/>"
+                
+                if phase.get('deliverables') and len(phase.get('deliverables', [])) > 0:
+                    roadmap_text += f"  成果物:<br/>"
+                    for item in phase.get('deliverables', []):
+                        roadmap_text += f"    • {item}<br/>"
+                elif phase.get('tasks') and len(phase.get('tasks', [])) > 0:
+                    roadmap_text += f"  タスク:<br/>"
+                    for item in phase.get('tasks', []):
+                        roadmap_text += f"    • {item}<br/>"
+                
+                if phase.get('milestones') and len(phase.get('milestones', [])) > 0:
+                    roadmap_text += f"  マイルストーン:<br/>"
+                    for item in phase.get('milestones', []):
+                        roadmap_text += f"    • {item}<br/>"
+                
+                if phase.get('resources'):
+                    roadmap_text += f"  リソース: {phase.get('resources')}<br/>"
+                
+                roadmap_text += "<br/>"
+            
+            content.append(Paragraph(roadmap_text, styles['Normal-JP']))
+        else:
+            content.append(Paragraph("情報なし", styles['Normal-JP']))
+        content.append(Spacer(1, 12))
+        
+        content.append(Paragraph("6. 投資概要", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        
+        investment = proposal.get('investmentSummary', {})
+        if investment:
+            investment_text = ""
+            
+            if investment.get('totalCost'):
+                investment_text += f"総コスト: {investment.get('totalCost')}<br/><br/>"
+            
+            if investment.get('breakdown') and len(investment.get('breakdown', {})) > 0:
+                investment_text += f"内訳:<br/>"
+                for key, value in investment.get('breakdown', {}).items():
+                    investment_text += f"  • {key}: {value}<br/>"
+                investment_text += "<br/>"
+            
+            if investment.get('roi'):
+                investment_text += f"ROI: {investment.get('roi')}<br/><br/>"
+            
+            if investment.get('paybackPeriod'):
+                investment_text += f"回収期間: {investment.get('paybackPeriod')}<br/>"
+            
+            content.append(Paragraph(investment_text, styles['Normal-JP']))
+        else:
+            content.append(Paragraph("情報なし", styles['Normal-JP']))
+        content.append(Spacer(1, 12))
+        
+        content.append(Paragraph("7. 結論", styles['SectionTitle']))
+        content.append(Spacer(1, 6))
+        content.append(Paragraph(proposal.get('conclusion', '情報なし'), styles['Normal-JP']))
+        
+        doc.build(
+            content,
+            onFirstPage=add_footer,
+            onLaterPages=add_footer
+        )
         
         return output_path
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Error generating PDF: {e}")
-        os.unlink(temp_json_path)
-        os.unlink(temp_script_path)
-        if os.path.exists(output_path):
+        if output_path and os.path.exists(output_path):
             os.unlink(output_path)
         raise RuntimeError(f"PDF生成中にエラーが発生しました: {e}")
+
+def add_footer(canvas, doc):
+    """Add footer to each page"""
+    canvas.saveState()
+    
+    canvas.setFont('Helvetica', 10)
+    canvas.drawCentredString(
+        doc.width / 2 + doc.leftMargin,
+        doc.bottomMargin - 30,
+        '© Mastra DX提案書ジェネレーター'
+    )
+    
+    canvas.drawCentredString(
+        doc.width / 2 + doc.leftMargin,
+        doc.bottomMargin - 45,
+        f"{doc.page} / {doc.pageCount()}"
+    )
+    
+    canvas.restoreState()
