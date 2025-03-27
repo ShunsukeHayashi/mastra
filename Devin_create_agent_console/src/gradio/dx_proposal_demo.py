@@ -8,6 +8,7 @@ import random
 from typing import Dict, List, Any, Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from gradio.pdf_export import generate_pdf_from_proposal
 
 API_BASE_URL = "http://127.0.0.1:4111/api"
 
@@ -598,51 +599,83 @@ def create_interface():
                 status_output = gr.Markdown("入力を待っています...")
                 
                 workflow_id = gr.State("")
+                proposal_data = gr.State(None)
                 
                 check_status_button = gr.Button("生成状況を確認", visible=False)
+                download_pdf_button = gr.Button("PDF形式でダウンロード", visible=False)
             
             with gr.Column(scale=3):
                 proposal_output = gr.Markdown("ここに生成された提案書が表示されます")
+                pdf_output = gr.File(label="DX提案書PDF", visible=False)
         
         def on_generate(url, areas, budget, timeline):
             if not url:
-                return "企業URLを入力してください", "", gr.update(visible=False)
+                return "企業URLを入力してください", "", gr.update(visible=False), gr.update(visible=False), None
             
             result = process_company_url(url, areas, budget, timeline)
             
             if "error" in result:
-                return result["error"], "", gr.update(visible=False)
+                return result["error"], "", gr.update(visible=False), gr.update(visible=False), None
             
             return (
                 f"処理を開始しました。ワークフローID: {result.get('workflowId')}\n{result.get('message', '')}",
                 result.get("workflowId", ""),
-                gr.update(visible=True)
+                gr.update(visible=True),
+                gr.update(visible=False),
+                None
             )
         
         def on_check_status(workflow_id):
             if not workflow_id:
-                return "ワークフローIDがありません", "エラー: 提案書を生成できませんでした"
+                return "ワークフローIDがありません", "エラー: 提案書を生成できませんでした", None, gr.update(visible=False)
             
             result = check_and_format_proposal(workflow_id)
             
             if "error" in result:
-                return f"エラー: {result['error']}", "エラー: 提案書を生成できませんでした"
+                return f"エラー: {result['error']}", "エラー: 提案書を生成できませんでした", None, gr.update(visible=False)
             
             if result.get("status") == "completed":
-                return "提案書の生成が完了しました！", result.get("proposal", "提案書データがありません")
+                proposal_data = None
+                if "raw_proposal" in result:
+                    proposal_data = result["raw_proposal"]
+                
+                return (
+                    "提案書の生成が完了しました！", 
+                    result.get("proposal", "提案書データがありません"),
+                    proposal_data,
+                    gr.update(visible=proposal_data is not None)
+                )
             else:
-                return result.get("message", "処理中です..."), "処理中..."
+                return result.get("message", "処理中です..."), "処理中...", None, gr.update(visible=False)
+        
+        def on_download_pdf(proposal_data):
+            if not proposal_data:
+                return gr.update(value=None, visible=False)
+            
+            try:
+                pdf_path = generate_pdf_from_proposal(proposal_data)
+                
+                return gr.update(value=pdf_path, visible=True)
+            except Exception as e:
+                print(f"Error generating PDF: {e}")
+                return gr.update(value=None, visible=False)
         
         generate_button.click(
             fn=on_generate,
             inputs=[company_url, focus_areas, budget, timeline],
-            outputs=[status_output, workflow_id, check_status_button]
+            outputs=[status_output, workflow_id, check_status_button, download_pdf_button, proposal_data]
         )
         
         check_status_button.click(
             fn=on_check_status,
             inputs=[workflow_id],
-            outputs=[status_output, proposal_output]
+            outputs=[status_output, proposal_output, proposal_data, download_pdf_button]
+        )
+        
+        download_pdf_button.click(
+            fn=on_download_pdf,
+            inputs=[proposal_data],
+            outputs=[pdf_output]
         )
     
     return demo
