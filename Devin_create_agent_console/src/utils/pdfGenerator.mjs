@@ -65,29 +65,25 @@ export async function generateDXProposalPDF(proposal, outputPath) {
 
       addSection(doc, '7. 結論', proposal.conclusion);
 
-      const pageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
-        
-        const originalY = doc.y;
-        
-        doc.fontSize(10)
-          .text(
-            '© Mastra DX提案書ジェネレーター',
-            50,
-            doc.page.height - 50,
-            { align: 'center', width: doc.page.width - 100 }
-          );
-        
-        doc.text(
-          `${i + 1} / ${pageCount}`,
+      // Add footer to current page only
+      const originalY = doc.y;
+      
+      doc.fontSize(10)
+        .text(
+          '© Mastra DX提案書ジェネレーター',
           50,
-          doc.page.height - 30,
+          doc.page.height - 50,
           { align: 'center', width: doc.page.width - 100 }
         );
-        
-        doc.y = originalY;
-      }
+      
+      doc.text(
+        `1 / 1`, // Simplified page numbering
+        50,
+        doc.page.height - 30,
+        { align: 'center', width: doc.page.width - 100 }
+      );
+      
+      doc.y = originalY;
 
       doc.end();
 

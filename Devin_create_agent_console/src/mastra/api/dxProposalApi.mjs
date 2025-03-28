@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+import fs from 'fs';
 import { serpApiTool } from '../tools/serpApiTool.mjs';
 
 /**
@@ -622,7 +623,25 @@ router.get('/dx-proposal/:workflowId/pdf', async (req, res) => {
       });
     }
     
-    const workflowState = workflowStates[workflowId];
+    console.log('Available workflow IDs:', Object.keys(workflowStates));
+    console.log('Requested workflow ID:', workflowId);
+    
+    // Try to find the workflow by ID
+    let workflowState = workflowStates[workflowId];
+    
+    // If not found, try to find the most recent completed workflow
+    if (!workflowState) {
+      console.log('Workflow not found, trying to find most recent completed workflow');
+      const completedWorkflows = Object.entries(workflowStates)
+        .filter(([_, state]) => state.status === 'completed')
+        .sort((a, b) => new Date(b[1].completedAt) - new Date(a[1].completedAt));
+      
+      if (completedWorkflows.length > 0) {
+        const [latestWorkflowId, latestWorkflow] = completedWorkflows[0];
+        console.log('Using most recent completed workflow:', latestWorkflowId);
+        workflowState = latestWorkflow;
+      }
+    }
     
     if (!workflowState) {
       return res.status(404).json({
@@ -653,10 +672,32 @@ router.get('/dx-proposal/:workflowId/pdf', async (req, res) => {
       // Generate PDF
       const pdfPath = await generateDXProposalPDF(workflowState.result.proposal);
       
-      // Send PDF file
-      return res.download(pdfPath, `${workflowState.result.proposal.companyInfo.name}_DX提案書.pdf`, (err) => {
-        if (err) {
-          console.error('Error sending PDF file:', err);
+      // Check if file exists
+      if (!fs.existsSync(pdfPath)) {
+        console.error('PDF file not found:', pdfPath);
+        return res.status(500).json({
+          success: false,
+          error: 'PDF生成に失敗しました',
+          message: 'ファイルが見つかりません'
+        });
+      }
+      
+      // Set content type and headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${workflowState.result.proposal.companyInfo.name}_DX提案書.pdf"`);
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(pdfPath);
+      fileStream.pipe(res);
+      
+      fileStream.on('error', (err) => {
+        console.error('Error streaming PDF file:', err);
+        if (!res.headersSent) {
+          return res.status(500).json({
+            success: false,
+            error: 'PDF送信中にエラーが発生しました',
+            message: err.message || '不明なエラー'
+          });
         }
       });
     } catch (pdfError) {

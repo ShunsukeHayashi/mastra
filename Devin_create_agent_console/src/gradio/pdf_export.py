@@ -290,7 +290,7 @@ def add_footer(canvas, doc):
     canvas.drawCentredString(
         doc.width / 2 + doc.leftMargin,
         doc.bottomMargin - 45,
-        f"{doc.page} / {doc.pageCount()}"
+        f"ページ {doc.page}"
     )
     
     canvas.restoreState()

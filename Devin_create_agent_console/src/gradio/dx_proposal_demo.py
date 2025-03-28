@@ -652,14 +652,29 @@ def create_interface():
         
         def on_download_pdf(proposal_data):
             if not proposal_data:
+                print("No proposal data available")
                 return gr.update(value=None, visible=False)
             
             try:
+                if isinstance(proposal_data, str):
+                    try:
+                        import json
+                        proposal_data = json.loads(proposal_data)
+                    except Exception as json_err:
+                        print(f"Could not parse proposal data as JSON: {json_err}")
+                
+                if isinstance(proposal_data, dict) and 'proposal' in proposal_data:
+                    proposal_data = proposal_data['proposal']
+                
+                print(f"Generating PDF with proposal data: {type(proposal_data)}")
                 pdf_path = generate_pdf_from_proposal(proposal_data)
+                print(f"PDF generated successfully at: {pdf_path}")
                 
                 return gr.update(value=pdf_path, visible=True)
             except Exception as e:
                 print(f"Error generating PDF: {e}")
+                import traceback
+                traceback.print_exc()
                 return gr.update(value=None, visible=False)
         
         generate_button.click(
@@ -684,4 +699,5 @@ def create_interface():
 
 if __name__ == "__main__":
     demo = create_interface()
-    demo.launch(share=True, server_port=7860, server_name="0.0.0.0")
+    port = int(os.environ.get("GRADIO_SERVER_PORT", 7862))
+    demo.launch(share=True, server_port=port, server_name="0.0.0.0")
