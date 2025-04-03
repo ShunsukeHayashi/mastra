@@ -21,7 +21,7 @@ interface MockAIProviderProps {
 }
 
 export const MockAIProvider: React.FC<MockAIProviderProps> = ({ children }) => {
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   
   const startProcessing = () => setIsProcessing(true);
